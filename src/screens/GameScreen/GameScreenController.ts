@@ -4,6 +4,9 @@ import { GameScreenModel } from "./GameScreenModel.ts";
 import { GameScreenView } from "./GameScreenView.ts";
 import { GAME_DURATION } from "../../constants.ts";
 
+
+
+
 /**
  * GameScreenController - Coordinates game logic between Model and View
  */
@@ -12,9 +15,9 @@ export class GameScreenController extends ScreenController {
 	private view: GameScreenView;
 	private screenSwitcher: ScreenSwitcher;
 	private gameTimer: number | null = null;
-
+	private timeRemaining = GAME_DURATION;
 	private squeezeSound: HTMLAudioElement;
-
+	
 	constructor(screenSwitcher: ScreenSwitcher) {
 		super();
 		this.screenSwitcher = screenSwitcher;
@@ -23,7 +26,7 @@ export class GameScreenController extends ScreenController {
 		this.view = new GameScreenView(() => this.handleLemonClick());
 
 		// TODO: Task 4 - Initialize squeeze sound audio
-		this.squeezeSound = new Audio(); // Placeholder
+		this.squeezeSound = new Audio('/squeeze.mp3');
 	}
 
 	/**
@@ -45,14 +48,26 @@ export class GameScreenController extends ScreenController {
 	 * Start the countdown timer
 	 */
 	private startTimer(): void {
-		// TODO: Task 3 - Implement countdown timer using setInterval
+		this.timeRemaining = GAME_DURATION;
+		const timerId = setInterval(() => {
+			--this.timeRemaining;
+			this.view.updateTimer(this.timeRemaining);
+  			console.log("This runs every 1000ms");
+			if (this.timeRemaining <= 0){
+			this.stopTimer();
+			this.endGame();
+		}}, 1000);
+		this.gameTimer = timerId;
 	}
 
 	/**
 	 * Stop the timer
 	 */
 	private stopTimer(): void {
-		// TODO: Task 3 - Stop the timer using clearInterval
+		if(this.gameTimer != null){
+			clearInterval(this.gameTimer);
+			this.gameTimer = null;
+		}
 	}
 
 	/**
@@ -65,8 +80,9 @@ export class GameScreenController extends ScreenController {
 		// Update view
 		this.view.updateScore(this.model.getScore());
 		this.view.randomizeLemonPosition();
-
 		// TODO: Task 4 - Play the squeeze sound
+		this.squeezeSound.currentTime = 0;
+		this.squeezeSound.play();
 	}
 
 	/**
